@@ -41,12 +41,16 @@ class AuthController extends Controller {
 
     // Logout
     public function logout() {
-        Auth::logout();
+    Auth::logout();
 
-        return response()->json(['message' => 'Выход выполнен успешно'])
-                         ->withCookie(cookie()->forget('access_token'))
-                         ->withCookie(cookie()->forget('refresh_token'));
-    }
+    $secure = config('app.env') === 'production';
+    $accessCookie = cookie()->forget('access_token', '/', null, $secure, true, false, 'Strict');
+    $refreshCookie = cookie()->forget('refresh_token', '/', null, $secure, true, false, 'Strict');
+
+    return response()->json(['message' => 'Выход выполнен успешно'])
+                    ->withCookie($accessCookie)
+                    ->withCookie($refreshCookie);
+}
 
     // Get Authenticated User
     public function me() {
@@ -74,8 +78,10 @@ class AuthController extends Controller {
         $accessToken = JWTAuth::fromUser($user, ['exp' => now()->addMinutes(30)->timestamp]);
         $refreshToken = JWTAuth::fromUser($user, ['exp' => now()->addDays(7)->timestamp]);
 
-        $accessCookie = cookie('access_token', $accessToken, 30, '/', null, true, true, false, 'Strict');
-        $refreshCookie = cookie('refresh_token', $refreshToken, 60*24*7, '/', null, true, true, false, 'Strict');
+
+        $secure = config('app.env') === 'production';
+        $accessCookie = cookie('access_token', $accessToken, 30, '/', null, $secure, true, false, 'Strict');
+        $refreshCookie = cookie('refresh_token', $refreshToken, 60*24*7, '/', null, $secure, true, false, 'Strict');
 
         return response()->json(['message' => 'Успешно'])
                         ->withCookie($accessCookie)

@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Middleware\JwtCookieAuth;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -16,11 +17,11 @@ Route::get('/user', function (Request $request) {
 
  // Protected routes (require JWT token)
 
- Route::middleware('auth:api')->group(function () {
-    Route::post('logout', [AuthController::class, 'logout']);
-    Route::get('me', [AuthController::class, 'me']);
-});
-
+ Route::middleware([JwtCookieAuth::class])->group(function () {
+     Route::get('me', [AuthController::class, 'me']);
+     });
+     
+     Route::post('logout', [AuthController::class, 'logout']);
 
 Route::post('refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
 
