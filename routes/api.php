@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PogruzkiController;
 use App\Http\Middleware\JwtCookieAuth;
 
 Route::get('/user', function (Request $request) {
@@ -18,10 +19,15 @@ Route::get('/user', function (Request $request) {
  // Protected routes (require JWT token)
 
  Route::middleware([JwtCookieAuth::class])->group(function () {
+
+
      Route::get('me', [AuthController::class, 'me']);
-     });
+
+     Route::get('pogruzki/getAll', [PogruzkiController::class, 'getAll']);
+
+});
      
-     Route::post('logout', [AuthController::class, 'logout']);
+Route::post('logout', [AuthController::class, 'logout']);
 
 Route::post('refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
 
