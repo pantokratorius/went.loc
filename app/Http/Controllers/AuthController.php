@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class AuthController extends Controller {
-
-    // User Registration
-    public function register(Request $request) {
+class AuthController extends Controller
+{
+    // ✅ REGISTER
+    public function register(Request $request)
+    {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -24,11 +25,12 @@ class AuthController extends Controller {
             'password' => Hash::make($request->password),
         ]);
 
-        return $this->createTokenResponse($user);
+        return $this->sendToken($user);
     }
 
-    // Login
-    public function login(Request $request) {
+    // ✅ LOGIN
+    public function login(Request $request)
+    {
         $credentials = $request->only('email', 'password');
 
         if (!$user = Auth::attempt($credentials)) {
@@ -36,55 +38,49 @@ class AuthController extends Controller {
         }
 
         $user = Auth::user();
-        return $this->createTokenResponse($user);
+        return $this->sendToken($user);
     }
 
-    // Logout
-    public function logout() {
-    Auth::logout();
+    // ✅ LOGOUT
+    public function logout()
+    {
+        Auth::logout();
 
-    $secure = config('app.env') === 'production';
-    $accessCookie = cookie()->forget('access_token', '/', null, $secure, true, false, 'Strict');
-    $refreshCookie = cookie()->forget('refresh_token', '/', null, $secure, true, false, 'Strict');
+        $secure = config('app.env') === 'production';
+        $accessCookie = cookie()->forget('access_token', '/', null, $secure, true, false, 'Strict');
 
-    return response()->json(['message' => 'Выход выполнен успешно'])
-                    ->withCookie($accessCookie)
-                    ->withCookie($refreshCookie);
-}
+        return response()->json(['message' => 'Выход выполнен успешно'])
+                        ->withCookie($accessCookie);
+    }
 
-    // Get Authenticated User
-    public function me() {
+    // ✅ CURRENT USER
+    public function me()
+    {
         return response()->json(Auth::user());
     }
 
-    // Refresh access token using refresh cookie
-    public function refresh(Request $request) {
-        $refreshToken = $request->cookie('refresh_token');
-        if (!$refreshToken) {
-            return response()->json(['error' => 'Нет refresh токена'], 401);
-        }
-
-        try {
-            $user = JWTAuth::setToken($refreshToken)->toUser();
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Недействительный refresh токен'], 401);
-        }
-
-        return $this->createTokenResponse($user);
-    }
-
-    // Helper: create access & refresh cookies
-    protected function createTokenResponse($user) {
-        $accessToken = JWTAuth::fromUser($user, ['exp' => now()->addMinutes(30)->timestamp]);
-        $refreshToken = JWTAuth::fromUser($user, ['exp' => now()->addDays(7)->timestamp]);
-
-
+    // ✅ HELPER: SEND ACCESS TOKEN COOKIE
+    protected function sendToken($user)
+    {
         $secure = config('app.env') === 'production';
-        $accessCookie = cookie('access_token', $accessToken, 30, '/', null, $secure, true, false, 'Strict');
-        $refreshCookie = cookie('refresh_token', $refreshToken, 60*24*7, '/', null, $secure, true, false, 'Strict');
+
+        // Generate token normally; TTL is handled by config/jwt.php
+        $accessToken = JWTAuth::fromUser($user);
+
+        // Cookie lifetime: 1 week = 10080 minutes
+        $accessCookie = cookie(
+            'access_token',
+            $accessToken,
+            60 * 24 * 7,
+            '/',
+            null,
+            $secure,
+            true, // httpOnly
+            false,
+            'Strict'
+        );
 
         return response()->json(['message' => 'Успешно'])
-                        ->withCookie($accessCookie)
-                        ->withCookie($refreshCookie);
+                        ->withCookie($accessCookie);
     }
 }
