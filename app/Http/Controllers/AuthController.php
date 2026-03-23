@@ -43,22 +43,25 @@ class AuthController extends Controller
 
     // ✅ LOGOUT
     public function logout()
-    {
+{
+    $token = JWTAuth::getToken(); // fetch token from request/cookie
 
-      try {
-        // Invalidate the token so it cannot be used again
-        JWTAuth::invalidate(JWTAuth::getToken());
-    } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-        // Token already expired or invalid
+    if ($token) {
+        try {
+            JWTAuth::invalidate($token); // blacklist it
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            // already invalid
+        }
     }
-        $secure = config('app.env') === 'production';
 
-        // Delete cookie exactly like it was set
-        $accessCookie = cookie('access_token', '', -1, '/', null, $secure, true, false, 'Strict');
+    $secure = config('app.env') === 'production';
 
-        return response()->json(['message' => 'Выход выполнен успешно'])
-                        ->withCookie($accessCookie);
-    }
+    // Delete cookie using same params as login
+    $accessCookie = cookie()->forget('access_token');
+
+    return response()->json(['message' => 'Выход выполнен успешно'])
+                    ->withCookie($accessCookie);
+}
 
     // ✅ CURRENT USER
     public function me()
