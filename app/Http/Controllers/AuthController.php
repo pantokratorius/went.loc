@@ -44,10 +44,10 @@ class AuthController extends Controller
     // ✅ LOGOUT
     public function logout()
     {
-        Auth::logout();
-
         $secure = config('app.env') === 'production';
-        $accessCookie = cookie()->forget('access_token', '/', null, $secure, true, false, 'Strict');
+
+        // Delete cookie exactly like it was set
+        $accessCookie = cookie('access_token', '', -1, '/', null, $secure, true, false, 'Strict');
 
         return response()->json(['message' => 'Выход выполнен успешно'])
                         ->withCookie($accessCookie);
