@@ -44,6 +44,13 @@ class AuthController extends Controller
     // ✅ LOGOUT
     public function logout()
     {
+
+      try {
+        // Invalidate the token so it cannot be used again
+        JWTAuth::invalidate(JWTAuth::getToken());
+    } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+        // Token already expired or invalid
+    }
         $secure = config('app.env') === 'production';
 
         // Delete cookie exactly like it was set
