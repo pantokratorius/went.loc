@@ -42,16 +42,23 @@ class AuthController extends Controller
     }
 
     // ✅ LOGOUT
-    public function logout()
-    {
-        $secure = config('app.env') === 'production';
 
-        // Delete cookie exactly like it was set
-        $accessCookie = cookie('access_token', '', -1, '/', null, $secure, true, false, 'Strict');
-
-        return response()->json(['message' => 'Выход выполнен успешно'])
-                        ->withCookie($accessCookie);
+public function logout()
+{
+    try {
+        $token = JWTAuth::parseToken()->getToken();
+        JWTAuth::invalidate($token); // blacklists the token
+    } catch (\Exception $e) {
+        // token missing or invalid
     }
+
+    // Delete cookie
+    $secure = config('app.env') === 'production';
+    $accessCookie = cookie('access_token', '', -1, '/', null, $secure, true, false, 'Strict');
+
+    return response()->json(['message' => 'Выход выполнен успешно'])
+                    ->withCookie($accessCookie);
+}
 
     // ✅ CURRENT USER
     public function me()
