@@ -64,9 +64,12 @@ class AuthController extends Controller
 
     // ✅ CURRENT USER
     public function me()
-    {
-        return response()->json(Auth::user());
+{
+    if (!$user = Auth::user()) {
+        return response()->json(['error' => 'Unauthenticated'], 401);
     }
+    return response()->json($user);
+}
 
     // ✅ HELPER: SEND ACCESS TOKEN COOKIE
     protected function sendToken($user)
