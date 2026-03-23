@@ -54,7 +54,6 @@ class AuthController extends Controller
         }
     }
 
-    $secure = config('app.env') === 'production';
 
     // Delete cookie using same params as login
     $accessCookie = cookie()->forget('access_token');
